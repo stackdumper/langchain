@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import regex
 from typing import Union
 
 from langchain.agents import AgentOutputParser
@@ -24,6 +25,12 @@ class ConvoOutputParser(AgentOutputParser):
             cleaned_output = cleaned_output[len("```") :]
         if cleaned_output.endswith("```"):
             cleaned_output = cleaned_output[: -len("```")]
+        if not cleaned_output.endswith("""\n}"""):
+            pattern = r"(\{(?:[^{}]|(?R))*\})"
+            match = regex.search(pattern, text)
+            if match is not None:
+                cleaned_output = match.group(0)
+        cleaned_output = cleaned_output.strip()
         cleaned_output = cleaned_output.strip()
         response = json.loads(cleaned_output)
         action, action_input = response["action"], response["action_input"]
